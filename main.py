@@ -90,17 +90,12 @@ class Field():
         return self.colors[self.arr[realX][realY]]
 
 
-
 class Main():
     def __init__(self):
         """
         stub
 
         """
-        # self.fieldSize = (200, 200)
-        # self.numStates = 5
-        # self.field = [[random.randint(0, self.numStates - 1) for _ in xrange(self.fieldSize[0])]
-        #               for _ in xrange(self.fieldSize[1])]
         self.field = Field(3, 3, 5)
         self.windowSize = (640, 480)
 
@@ -119,10 +114,11 @@ class Main():
             for y in xrange(self.field.sizeY):
                 neib = []
                 for xOff in [-1, 0, 1]:
-                    for yOff in [-1, 1]:
+                    for yOff in [-1, 0, 1]:
+                        if xOff == 0 and yOff == 0:
+                            pass
                         neib.append(self.field.get(x + xOff, y + yOff))
-                print(neib)
-
+                print("Cell {0:d},{1:d} Val {2:d}".format(x, y, self.field.get(x, y)), neib)
 
     def go(self):
         fpsClock = pygame.time.Clock()
