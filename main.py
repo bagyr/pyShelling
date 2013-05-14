@@ -41,11 +41,11 @@ class Field():
         :return: Real coords
         """
         realX, realY = x, y
-        while realX > self.sizeX:
+        while realX >= self.sizeX:
             realX -= self.sizeX
         while realX < 0:
             realX += self.sizeX
-        while realY > self.sizeY:
+        while realY >= self.sizeY:
             realY -= self.sizeY
         while realY < 0:
             realY += self.sizeY
@@ -108,8 +108,8 @@ class Main():
         cellSize = min([(lambda i, j: i / j)(a, b) for (a, b) in
                         zip(self.windowSize, (self.field.sizeX, self.field.sizeY))])
         outSurf = pygame.Surface((self.field.sizeX * cellSize, self.field.sizeY * cellSize))
-        for x in self.field.sizeX:
-            for y in self.field.sizeY:
+        for x in range(self.field.sizeX):
+            for y in range(self.field.sizeY):
                 pygame.draw.rect(outSurf, self.field.getColor(x, y),
                                  pygame.Rect(x * cellSize, y * cellSize, cellSize, cellSize))
         return outSurf
