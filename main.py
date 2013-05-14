@@ -1,13 +1,16 @@
-__author__ = 'arubtsov'
-
+from __future__ import division
+import copy
 import pygame
 from pygame.locals import *
 import sys
 import random
 
 
+__author__ = 'arubtsov'
+
+
 class Field():
-    def __init__(self, sizeX, sizeY, states):
+    def __init__(self, sizeX, sizeY, states, tresh):
         """
 
         :param sizeX: Field width
@@ -21,7 +24,9 @@ class Field():
         self.colors = []
         for i in range(self.numStates):
             self.colors.append(pygame.Color(*[random.randint(0, 255) for _ in [0, 1, 2]]))
+        self.colors[0] = pygame.Color('white')
         self.arr = self.generate()
+        self.tresh = tresh
 
     def generate(self):
         """
@@ -90,13 +95,14 @@ class Field():
         return self.colors[self.arr[realX][realY]]
 
 
+
 class Main():
     def __init__(self):
         """
         stub
 
         """
-        self.field = Field(3, 3, 5)
+        self.field = Field(100, 100, 4, 0.5)
         self.windowSize = (640, 480)
 
     def draw(self):
@@ -110,6 +116,8 @@ class Main():
         return outSurf
 
     def process(self):
+        tmpField = copy.deepcopy(self.field)
+        assert isinstance(tmpField, Field)
         for x in xrange(self.field.sizeX):
             for y in xrange(self.field.sizeY):
                 neib = []
@@ -117,8 +125,17 @@ class Main():
                     for yOff in [-1, 0, 1]:
                         if xOff == 0 and yOff == 0:
                             pass
-                        neib.append(self.field.get(x + xOff, y + yOff))
-                print("Cell {0:d},{1:d} Val {2:d}".format(x, y, self.field.get(x, y)), neib)
+                        else:
+                            neib.append(self.field.get(x + xOff, y + yOff))
+                percent = neib.count(self.field.get(x, y)) / len(neib)
+                if percent < self.field.tresh:
+                    swapX, swapY = random.randint(0, self.field.sizeX), random.randint(0, self.field.sizeY)
+                    while tmpField.get(swapX, swapY) != 0:
+                        swapX, swapY = random.randint(0, self.field.sizeX), random.randint(0, self.field.sizeY)
+                    t1, t2 = tmpField.get(swapX, swapY), tmpField.get(x, y)
+                    tmpField.set(x, y, t1)
+                    tmpField.set(swapX, swapY, t2)
+        self.field = copy.deepcopy(tmpField)
 
     def go(self):
         fpsClock = pygame.time.Clock()
@@ -135,9 +152,10 @@ class Main():
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
                         pygame.event.post(pygame.event.Event(QUIT))
+            self.process()
             wndSurf.blit(self.draw(), (0, 0))
             pygame.display.update()
-            fpsClock.tick(30)
+            fpsClock.tick(10)
 
 
 if __name__ == "__main__":
