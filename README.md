@@ -1,0 +1,4 @@
+pyShelling
+==========
+
+Shelling segregation
