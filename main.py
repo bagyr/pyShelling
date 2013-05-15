@@ -10,9 +10,12 @@ __author__ = 'arubtsov'
 
 
 class Field():
-    def __init__(self, sizeX, sizeY, states, tresh):
+    def __init__(self, sizeX=100, sizeY=100, states=5, tresh=0.5, prob=0.5):
         """
 
+
+        :param prob: Move probability
+        :param tresh: Move threshold
         :param sizeX: Field width
         :param sizeY: Field height
         :param states: Number of states
@@ -26,7 +29,9 @@ class Field():
             self.colors.append(pygame.Color(*[random.randint(0, 255) for _ in [0, 1, 2]]))
         self.colors[0] = pygame.Color('white')
         self.arr = self.generate()
+        self.shadowArr = copy.deepcopy(self.arr)
         self.tresh = tresh
+        self.prob = prob
 
     def generate(self):
         """
@@ -56,7 +61,7 @@ class Field():
             realY += self.sizeY
         return realX, realY
 
-    def get(self, x, y):
+    def get(self, x, y, shadow=False):
         """
 
         :param x: X cell
@@ -64,6 +69,8 @@ class Field():
         :return: Cell content
         """
         realX, realY = self.normalizeCords(x, y)
+        if shadow:
+            return self.shadowArr[realX][realY]
         return self.arr[realX][realY]
 
     def getWithOffset(self, x, y, dx, dy):
@@ -76,12 +83,15 @@ class Field():
         :param dy: Y offset
         :return: Cell content
         """
-        realX, realY = self.normalizeCords(x + dx, y + dy)
-        return self.arr[realX][realY]
 
-    def set(self, x, y, val):
+        return self.get(x + dx, y + dy)
+
+    def set(self, x, y, val, shadow=False):
         realX, realY = self.normalizeCords(x, y)
-        self.arr[realX][realY] = val
+        if shadow:
+            self.shadowArr[realX][realY] = val
+        else:
+            self.arr[realX][realY] = val
 
     def getColor(self, x, y):
         """
@@ -91,9 +101,28 @@ class Field():
         :param y: Cell y
         :return: Cell color
         """
-        realX, realY = self.normalizeCords(x, y)
-        return self.colors[self.arr[realX][realY]]
+        # realX, realY = self.normalizeCords(x, y)
+        return self.colors[self.get(x, y)]
 
+    def process(self):
+        for x in xrange(self.sizeX):
+            for y in xrange(self.sizeY):
+                neib = []
+                for xOff in [-1, 0, 1]:
+                    for yOff in [-1, 0, 1]:
+                        if xOff == 0 and yOff == 0:
+                            pass
+                        else:
+                            neib.append(self.get(x + xOff, y + yOff))
+                percent = neib.count(self.get(x, y)) / len(neib)
+                if percent < self.tresh:
+                    swapX, swapY = random.randint(0, self.sizeX), random.randint(0, self.sizeY)
+                    while self.get(swapX, swapY, True) != 0:
+                        swapX, swapY = random.randint(0, self.sizeX), random.randint(0, self.sizeY)
+                    t1, t2 = self.get(swapX, swapY, True), self.get(x, y, True)
+                    self.set(x, y, t1, True)
+                    self.set(swapX, swapY, t2, True)
+        self.arr = copy.deepcopy(self.shadowArr)
 
 
 class Main():
@@ -116,33 +145,14 @@ class Main():
         return outSurf
 
     def process(self):
-        tmpField = copy.deepcopy(self.field)
-        assert isinstance(tmpField, Field)
-        for x in xrange(self.field.sizeX):
-            for y in xrange(self.field.sizeY):
-                neib = []
-                for xOff in [-1, 0, 1]:
-                    for yOff in [-1, 0, 1]:
-                        if xOff == 0 and yOff == 0:
-                            pass
-                        else:
-                            neib.append(self.field.get(x + xOff, y + yOff))
-                percent = neib.count(self.field.get(x, y)) / len(neib)
-                if percent < self.field.tresh:
-                    swapX, swapY = random.randint(0, self.field.sizeX), random.randint(0, self.field.sizeY)
-                    while tmpField.get(swapX, swapY) != 0:
-                        swapX, swapY = random.randint(0, self.field.sizeX), random.randint(0, self.field.sizeY)
-                    t1, t2 = tmpField.get(swapX, swapY), tmpField.get(x, y)
-                    tmpField.set(x, y, t1)
-                    tmpField.set(swapX, swapY, t2)
-        self.field = copy.deepcopy(tmpField)
+        self.field.process()
 
     def go(self):
         fpsClock = pygame.time.Clock()
         pygame.init()
         wndSurf = pygame.display.set_mode(self.windowSize)
         assert isinstance(wndSurf, pygame.Surface)
-        pygame.display.set_caption('Simple game')
+        pygame.display.set_caption('Insert name')
         while True:
             wndSurf.fill(pygame.Color('white'))
             for event in pygame.event.get():
