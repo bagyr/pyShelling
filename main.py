@@ -101,7 +101,6 @@ class Field():
         :param y: Cell y
         :return: Cell color
         """
-        # realX, realY = self.normalizeCords(x, y)
         return self.colors[self.get(x, y)]
 
     def process(self):
@@ -131,7 +130,7 @@ class Main():
         stub
 
         """
-        self.field = Field(100, 100, 4, 0.5)
+        self.field = Field(100, 100, 4, 0.3)
         self.windowSize = (640, 480)
 
     def draw(self):
@@ -165,7 +164,7 @@ class Main():
             self.process()
             wndSurf.blit(self.draw(), (0, 0))
             pygame.display.update()
-            fpsClock.tick(10)
+            # fpsClock.tick(10)
 
 
 if __name__ == "__main__":
